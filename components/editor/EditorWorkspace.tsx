@@ -1,6 +1,86 @@
 "use client";
+
 import { DragEvent, useRef, useState } from "react";
 import NovelReader from "@/components/reader/NovelReader";
 import { inferTitle } from "@/lib/markdown";
-const SAMPLE=`# 조우 — 「믿나」\n\n> 작품 메모. 밤의 시장에서 시작되는 이야기.\n> 등장: 안경, 의뢰인\n> 주의: 조용하고 느린 호흡\n\n## 1\n\n봉래시장 서쪽 물류 구역, 컨테이너 열여섯 동.\n\n그중 일곱 번째 동에 오늘 저녁 거래가 있을 예정이라고 했다.\n\n*…선배.*\n\n“문은 이미 열려 있었습니다.”\n\n---\n\n## 2\n\n안쪽은 조용했다. 너무 조용해서 멀리 떨어진 도로의 타이어 소리가 파도처럼 들려왔다.\n\n- 손전등\n- 낡은 열쇠\n- 이름 없는 봉투\n\n그는 [바깥](https://example.com)을 한 번 돌아보고 안으로 발을 들였다.`;
-export default function EditorWorkspace() { const [markdown,setMarkdown]=useState(SAMPLE); const [title,setTitle]=useState("조우 — 「믿나」"); const [tab,setTab]=useState<"edit"|"preview">("edit"); const [drag,setDrag]=useState(false); const [sharing,setSharing]=useState(false); const [result,setResult]=useState(""); const [message,setMessage]=useState(""); const fileRef=useRef<HTMLInputElement>(null); const loadFile=async(file?:File)=>{if(!file||!file.name.toLowerCase().endsWith(".md")){setMessage(".md 파일을 선택해 주세요.");return;} const text=await file.text(); setMarkdown(text); if(!title.trim()) setTitle(inferTitle(text,file.name));setMessage(`${file.name}을 불러왔습니다.`);}; const drop=(e:DragEvent)=>{e.preventDefault();setDrag(false);loadFile(e.dataTransfer.files[0]);}; const share=async()=>{if(!markdown.trim()){setMessage("Markdown 내용을 입력해 주세요.");return;} setSharing(true);setMessage("");setResult("");try{const response=await fetch("/api/share",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.trim()||inferTitle(markdown),markdown})});const data=await response.json();if(!response.ok)throw new Error(data.error);setResult(new URL(data.url,location.origin).href);}catch(e){setMessage(e instanceof Error?e.message:"공유에 실패했습니다.");}finally{setSharing(false)}}; const copy=async()=>{await navigator.clipboard.writeText(result);setMessage("링크를 복사했습니다.");}; const systemShare=async()=>{if(navigator.share)await navigator.share({title,url:result});else await copy();}; return <main className="workspace"><header className="workspace-header"><div><span className="brand-mark">Quiet Page</span><p>Markdown으로 쓰고, 전자책처럼 읽고, 링크로 공유하세요.</p></div><button className="share-primary" disabled={sharing} onClick={share}>{sharing?"공유 중…":"공유하기"}</button></header><div className="mobile-tabs"><button className={tab==="edit"?"active":""} onClick={()=>setTab("edit")}>작성</button><button className={tab==="preview"?"active":""} onClick={()=>setTab("preview")}>미리보기</button></div><section className="workspace-grid"><div className={`editor-pane ${tab!=="edit"?"mobile-hidden":""}`} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={drop}><div className="pane-heading"><strong>Markdown Editor</strong><div><button onClick={()=>fileRef.current?.click()}>.md 불러오기</button><button onClick={()=>{setTitle("");setMarkdown("");setMessage("초기화했습니다.")}}>초기화</button></div></div><input className="title-input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="작품 제목" aria-label="작품 제목"/><div className={`editor-area ${drag?"dragging":""}`}><textarea value={markdown} onChange={e=>setMarkdown(e.target.value)} spellCheck={false} aria-label="Markdown 내용"/><span className="drop-hint">.md 파일을 여기에 놓으세요</span></div><input ref={fileRef} type="file" accept=".md,text/markdown" hidden onChange={e=>loadFile(e.target.files?.[0])}/></div><div className={`preview-pane ${tab!=="preview"?"mobile-hidden":""}`}><div className="pane-heading"><strong>Reader Preview</strong><span>실제 공유 화면과 동일합니다</span></div><NovelReader documentId="preview" title={title.trim()||inferTitle(markdown)} markdown={markdown||"아직 내용이 없습니다."} preview/></div></section>{(result||message)&&<aside className="share-result" aria-live="polite">{result&&<><strong>공유 링크가 생성되었습니다.</strong><a href={result} target="_blank" rel="noreferrer">{result}</a><div><button onClick={copy}>링크 복사</button><button onClick={systemShare}>공유</button></div></>}{message&&<p>{message}</p>}</aside>}</main> }
+
+export default function EditorWorkspace() {
+  const [document, setDocument] = useState<{ title: string; markdown: string } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [message, setMessage] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const openFile = async (file?: File) => {
+    if (!file || !/\.(md|txt)$/i.test(file.name)) {
+      setMessage(".md 또는 .txt 파일을 선택해 주세요.");
+      return;
+    }
+    try {
+      const markdown = await file.text();
+      if (!markdown.trim()) throw new Error("빈 파일은 열 수 없습니다.");
+      setDocument({ title: inferTitle(markdown, file.name), markdown });
+      setMessage("");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "파일을 읽지 못했습니다.");
+    }
+  };
+
+  const drop = (event: DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    void openFile(event.dataTransfer.files[0]);
+  };
+
+  const leaveReader = () => {
+    if (window.confirm("책을 닫고 처음 화면으로 나가시겠습니까?")) setDocument(null);
+  };
+
+  const share = async () => {
+    if (!document) return;
+    setMessage("공유 링크를 만드는 중…");
+    try {
+      const response = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(document),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "공유에 실패했습니다.");
+      const url = new URL(data.url, location.origin).href;
+      if (navigator.share) await navigator.share({ title: document.title, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        setMessage("공유 링크를 복사했습니다.");
+      }
+    } catch (error) {
+      if ((error as DOMException)?.name !== "AbortError")
+        setMessage(error instanceof Error ? error.message : "공유에 실패했습니다.");
+    }
+  };
+
+  return <main className="device-stage">
+    <section className={`ebook-device ${document ? "is-reading" : "is-library"}`}>
+      {!document ? <button
+        className={`open-book ${dragging ? "is-dragging" : ""}`}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={drop}
+        aria-label="Markdown 또는 텍스트 파일 열기"
+      >
+        <span className="open-cross" aria-hidden="true"><i/><i/></span>
+        <strong>{dragging ? "여기에 놓기" : "열기"}</strong>
+        <small>.md · .txt</small>
+      </button> : <NovelReader
+        documentId={`local:${document.title}`}
+        title={document.title}
+        markdown={document.markdown}
+        onBack={leaveReader}
+        onShare={() => void share()}
+      />}
+      <input ref={inputRef} hidden type="file" accept=".md,.txt,text/markdown,text/plain" onChange={(e) => void openFile(e.target.files?.[0])}/>
+    </section>
+    {!document && <div className="device-caption"><span>QUIET PAGE</span><p>파일은 이 기기에서 바로 열립니다</p></div>}
+    {message && <div className="device-toast" role="status" onClick={() => setMessage("")}>{message}</div>}
+  </main>;
+}
