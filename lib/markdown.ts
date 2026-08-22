@@ -1,0 +1,5 @@
+export interface HeadingItem { id: string; text: string; level: number }
+export function slugify(text: string, index = 0) { const value = text.toLowerCase().trim().replace(/[^\p{L}\p{N}\s-]/gu, "").replace(/\s+/g, "-"); return value || `section-${index + 1}`; }
+export function extractHeadings(markdown: string): HeadingItem[] { const seen = new Map<string, number>(); return markdown.split(/\r?\n/).flatMap((line) => { const match = /^(#{1,6})\s+(.+?)\s*$/.exec(line); if (!match) return []; const base = slugify(match[2]); const count = seen.get(base) ?? 0; seen.set(base, count + 1); return [{ id: count ? `${base}-${count + 1}` : base, text: match[2].replace(/[*_`]/g, ""), level: match[1].length }]; }); }
+export function inferTitle(markdown: string, filename?: string) { const h1 = /^#\s+(.+)$/m.exec(markdown)?.[1]?.trim(); return h1 || filename?.replace(/\.md$/i, "") || "제목 없는 작품"; }
+export function safeFilename(title: string) { return (title || "document").replace(/[\\/:*?"<>|]/g, "-").trim().slice(0, 80) || "document"; }
