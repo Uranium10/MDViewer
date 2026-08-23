@@ -125,3 +125,11 @@
 - keyboard/tap 전환에 swipe와 동일한 72ms paper-lift anticipation 단계 추가
 - ArrowLeft/ArrowRight/PageUp/PageDown/tap/swipe가 동일한 snapshot transition 함수 사용
 - animation lock, page sound, direction, progress update 시점을 단일 pipeline으로 통합
+
+[Spine-based page transition - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 페이지 snapshot을 책등(left edge) 기준 rotateY로 회전하도록 변경
+- viewport에 light/dark 전자종이 배경색을 포함해 글과 종이가 한 장으로 함께 회전
+- 텍스트가 종이와 함께 이동하고 전환 절반 이후 opacity가 감소하도록 조정
+- keyboard/tap 전환의 짧은 anticipation을 제거하고 전체 애니메이션을 300ms 고정 재생
+- View Transition 미지원 브라우저 fallback도 300ms로 통일

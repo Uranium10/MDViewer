@@ -5,6 +5,7 @@ import MarkdownRenderer from "./MarkdownRenderer";
 type Props={markdown:string;progress:number;onProgress:(n:number)=>void;onUiToggle:()=>void;goToId:string|null};
 type Gesture={x:number;y:number;t:number;horizontal?:boolean};
 type TransitionDocument={startViewTransition?:(update:()=>void)=>{finished:Promise<void>}};
+const PAGE_TURN_DURATION=300;
 
 export default function PaginatedReader({markdown,progress,onProgress,onUiToggle,goToId}:Props){
   const viewport=useRef<HTMLDivElement>(null),content=useRef<HTMLDivElement>(null),effect=useRef<HTMLDivElement>(null);
@@ -17,13 +18,13 @@ export default function PaginatedReader({markdown,progress,onProgress,onUiToggle
   const setPosition=useCallback((next:number,report=true)=>{const view=viewport.current;if(!view)return;const clamped=Math.max(0,Math.min(pagesRef.current-1,next));pageRef.current=clamped;view.scrollLeft=clamped*view.clientWidth;setPage(old=>old===clamped?old:clamped);if(report)onProgressRef.current(pagesRef.current>1?clamped/(pagesRef.current-1):0)},[]);
   const playSound=useCallback(()=>{const player=audio.current;if(!player)return;player.currentTime=0;void player.play().catch(()=>{})},[]);
 
-  const settle=useCallback((to:number,fromLeft:boolean,nextPage:number|null)=>{if(animation.current!==null)cancelAnimationFrame(animation.current);const from=dragProgress.current;const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;if(nextPage!==null)playSound();if(reduced){if(nextPage!==null)setPosition(nextPage);showEffect(0,fromLeft);dragProgress.current=0;animating.current=false;return}animating.current=true;const started=performance.now(),duration=nextPage===null?120:210;let switched=false;const tick=(now:number)=>{const ratio=Math.min(1,(now-started)/duration);const eased=1-Math.pow(1-ratio,3);const value=from+(to-from)*eased;showEffect(value,fromLeft);if(nextPage!==null&&!switched&&value>=.58){switched=true;setPosition(nextPage)}if(ratio<1)animation.current=requestAnimationFrame(tick);else{showEffect(0,fromLeft);dragProgress.current=0;animating.current=false;animation.current=null}};animation.current=requestAnimationFrame(tick)},[playSound,setPosition,showEffect]);
+  const settle=useCallback((to:number,fromLeft:boolean,nextPage:number|null)=>{if(animation.current!==null)cancelAnimationFrame(animation.current);const from=dragProgress.current;const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;if(nextPage!==null)playSound();if(reduced){if(nextPage!==null)setPosition(nextPage);showEffect(0,fromLeft);dragProgress.current=0;animating.current=false;return}animating.current=true;const started=performance.now(),duration=nextPage===null?120:PAGE_TURN_DURATION;let switched=false;const tick=(now:number)=>{const ratio=Math.min(1,(now-started)/duration);const eased=1-Math.pow(1-ratio,3);const value=from+(to-from)*eased;showEffect(value,fromLeft);if(nextPage!==null&&!switched&&value>=.58){switched=true;setPosition(nextPage)}if(ratio<1)animation.current=requestAnimationFrame(tick);else{showEffect(0,fromLeft);dragProgress.current=0;animating.current=false;animation.current=null}};animation.current=requestAnimationFrame(tick)},[playSound,setPosition,showEffect]);
   const runSnapshotTransition=useCallback((next:number,fromLeft:boolean)=>{
     const transitionDocument=document as unknown as TransitionDocument;
     showEffect(0,fromLeft);playSound();
     document.documentElement.dataset.pageTurn=fromLeft?"backward":"forward";
     const transition=transitionDocument.startViewTransition?.call(document,()=>setPosition(next));
-    if(!transition){setPosition(next);animating.current=false;return}
+    if(!transition){delete document.documentElement.dataset.pageTurn;setPosition(next);dragProgress.current=0;animating.current=false;return}
     void transition.finished.finally(()=>{delete document.documentElement.dataset.pageTurn;animating.current=false;dragProgress.current=0});
   },[playSound,setPosition,showEffect]);
   const turn=useCallback((next:number,fromLeft:boolean,start=0)=>{
@@ -35,10 +36,7 @@ export default function PaginatedReader({markdown,progress,onProgress,onUiToggle
     if(typeof transitionDocument.startViewTransition==="function"&&!reduced){
       if(animation.current!==null)cancelAnimationFrame(animation.current);
       animating.current=true;
-      if(start>.01){runSnapshotTransition(clamped,fromLeft);return}
-      const started=performance.now(),duration=72,peak=.18;
-      const anticipate=(now:number)=>{const ratio=Math.min(1,(now-started)/duration);showEffect(peak*(1-Math.pow(1-ratio,2)),fromLeft);if(ratio<1)animation.current=requestAnimationFrame(anticipate);else{animation.current=null;dragProgress.current=peak;runSnapshotTransition(clamped,fromLeft)}};
-      animation.current=requestAnimationFrame(anticipate);
+      runSnapshotTransition(clamped,fromLeft);
       return;
     }
     showEffect(Math.max(.025,start),fromLeft);settle(1,fromLeft,clamped);
