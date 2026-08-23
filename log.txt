@@ -151,3 +151,17 @@
 - 현재 Reader를 유지한 overlay guidebook과 History API 기반 뒤로가기 복귀 구현
 - live dev server와 충돌하지 않는 typecheck/source lint 통과, server HTTP 200 확인
 - ESLint가 .next 생성물을 검사하지 않도록 ignore 범위 보정
+
+[Planned reader features - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 초기 화면 전역 paste 지원 및 120KB 이상 clipboard/file의 단계별 loading progress 구현
+- 콘텐츠 SHA-256 기반 local document ID로 같은 파일의 독서 세션 키 안정화
+- 기존 Turso 본문 검색 + deterministic ID + INSERT conflict 방어로 중복 공유 canonical link 재사용
+- 공유/저장/목차를 단말기 내부 전자종이 panel UI로 통일
+- 저장 메뉴에 Markdown download, browser print-to-PDF, plain text copy 추가
+- 페이지 번호 옆 bookmark toggle과 normalized bookmark/local reading session 복원 구현
+- 초기 화면 하단 공유/비활성 메모/비활성 Tetris 메뉴 및 상단 도움말 버튼 구현
+- Next.js devIndicators 비활성화
+- 전체 Markdown은 PDF 요청 시에만 print DOM으로 생성해 평상시 render 비용 차단
+- TypeScript noEmit 및 ESLint 통과, 초기/공유 화면 headless Chrome 렌더 확인
+- 기존 공유 문서 연속 2회 요청에서 reused=true 및 동일 canonical ID 반환 확인
