@@ -64,3 +64,22 @@
 - 도트풍 해/달 밝기 토글과 읽기 방식/글자 크기/행간/폭/글꼴 설정 내장
 - 페이지 swipe 거리를 6단계로 양자화한 CSS page-curl 프레임 추가
 - production build 성공
+
+[Reader 성능 최적화 - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 병목 분석: pointermove별 전체 Markdown 재렌더, progress별 ResizeObserver 재등록, 초대형 transform 합성 레이어, 잘못된 window scroll 감시, 상단 drawer drag별 상위 state 갱신 확인
+- MarkdownRenderer를 React.memo로 고정해 진행률/gesture UI 변경 시 Markdown AST 및 DOM 재조정 방지
+- 페이지 swipe 위치를 React state에서 ref + requestAnimationFrame DOM 갱신으로 분리
+- page curl state는 6단계 frame이 실제 변경될 때만 갱신
+- 초대형 multi-column DOM transform과 상시 will-change 제거
+- 고정 page viewport의 scrollLeft 기반 페이지 이동으로 전환하여 화면 인접 영역 위주로 합성
+- pagination measure callback 안정화 및 ResizeObserver 측정 requestAnimationFrame 병합
+- 페이지 수/현재 페이지 값이 같으면 state update 생략
+- 설정 변경 시 normalized progress를 유지한 명시적 repagination 적용
+- Scroll Reader를 window가 아닌 실제 내부 scroll element 기준으로 수정
+- scroll 진행 표시를 rAF로 갱신하고 React progress 전달을 100ms 단위로 제한
+- 읽기 위치 localStorage는 스크롤 정지 후 debounce 저장 유지
+- 상단 설정 drawer drag를 React state에서 분리하고 rAF transform으로 변경
+- Reader 영역에 layout/paint containment 및 overscroll containment 추가
+- 120개 장 로컬 fixture, 390x844 headless Chrome production 화면 검증 (HTTP 200)
+- 점검 중 발견한 한국어 좁은 화면 줄 잘림과 하단 4열 toolbar overflow 함께 수정
