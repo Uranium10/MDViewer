@@ -264,3 +264,6 @@
 
 [Codex - mobile Markdown picker - 2026-08-23]
 - Opened the native picker without MIME filtering on coarse-pointer devices while retaining strict post-selection extension validation and desktop filters.
+
+[Codex - mobile code scrolling - 2026-08-23]
+- Enabled native horizontal touch scrolling for overflowing code blocks and isolated code swipes from paginated page-turn gestures.
