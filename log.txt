@@ -103,3 +103,19 @@
 - 공유 작업 완료/취소 시 '공유 링크를 만드는 중…' 상태를 즉시 제거하고 성공 안내는 자동 소멸
 - package/run.bat 표시 이름을 MD Books로 변경
 - production build 성공, 홈/robots/sitemap/manifest HTTP 200 및 MD북스·MDViewer metadata 확인
+
+[Page cache transition / full drawer - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 완전히 열린 quick drawer를 Reader 전체 높이로 확장해 하단 toolbar까지 덮도록 변경
+- drawer 내부를 flex/paint containment로 격리하고 설정 목록만 독립 scroll 처리
+- drawer handle은 항상 메뉴 최하단에 유지
+- 기존 작은 해/달 segmented toggle을 102px 원형 전자종이 스타일 theme button으로 교체
+- CSS radial/conic texture로 햇빛/달빛 이미지 전환, 별도 bitmap/network 비용 없음
+- 페이지 전체 DOM을 앞/현재/뒤로 복제하는 방식을 메모리/레이아웃 비용 때문에 배제
+- CSS multi-column에 이미 배치된 인접 페이지와 View Transition viewport snapshot cache를 결합
+- 앞으로 이동 시 현재 page snapshot이 240ms 동안 viewport 위쪽 끝(-108%)까지 이동하고 준비된 다음 페이지 노출
+- 뒤로 이동 시 준비된 이전 page snapshot이 위에서 내려와 현재 페이지를 덮는 방향성 적용
+- 전환 완료 후 브라우저 snapshot 자동 폐기, 새 현재 페이지와 인접 column을 다음 전환 cache로 재사용
+- transition 대상은 page viewport 하나로 제한해 toolbar/drawer/긴 Markdown DOM snapshot 방지
+- animation 중 추가 gesture 차단, reduced-motion 및 미지원 브라우저 fold fallback 유지
+- production build 성공
