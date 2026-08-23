@@ -261,3 +261,6 @@
 
 [Codex - DOCX export - 2026-08-23]
 - Added a lazily loaded browser-side DOCX exporter with Markdown headings, inline styles, lists, quotes, code blocks, tables, links, and safe file downloads.
+
+[Codex - mobile Markdown picker - 2026-08-23]
+- Opened the native picker without MIME filtering on coarse-pointer devices while retaining strict post-selection extension validation and desktop filters.

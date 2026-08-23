@@ -122,6 +122,7 @@ export default function EditorWorkspace() {
 
   const shareApp = () => setLibraryShare(true);
   const openGame=()=>{setLibraryGuide(false);setLibraryShare(false);setGameOpen(true)};
+  const openFilePicker=()=>{const input=inputRef.current;if(!input)return;input.accept=matchMedia("(pointer: coarse)").matches?"*/*":".md,.txt,text/markdown,text/plain";input.click()};
   const openLibraryGuide=()=>{setLibraryShare(false);history.pushState({...history.state,mdBooksLibraryGuide:true},"",location.href);setLibraryGuide(true)};
   const closeLibraryGuide=()=>{setLibraryGuide(false);if(history.state?.mdBooksLibraryGuide)history.back()};
   const toggleLibraryGuide=()=>libraryGuide?closeLibraryGuide():openLibraryGuide();
@@ -137,7 +138,7 @@ export default function EditorWorkspace() {
         onPageChange={(current,total)=>updateRecentPage(document.id,current,total)}
       /> : gameOpen?<EInkTetris onBack={()=>setGameOpen(false)}/>:<><header className="library-status"><strong>MD북스</strong><time>{clock}</time><button className="reader-help" onClick={toggleLibraryGuide} aria-label={libraryGuide?"MD북스 도움말 닫기":"MD북스 도움말 열기"} aria-expanded={libraryGuide}><i className="pixel-icon icon-help" aria-hidden="true">?</i></button></header><div className={`open-book ${dragging ? "is-dragging" : ""}`}><button
         className="open-book-primary"
-        onClick={() => inputRef.current?.click()}
+        onClick={openFilePicker}
         aria-label="Markdown 또는 텍스트 파일 열기"
       >
         <span className="open-cross" aria-hidden="true"><i/><i/></span>
