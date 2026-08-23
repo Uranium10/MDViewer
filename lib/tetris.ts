@@ -8,7 +8,7 @@ export type Cell=Tetromino|null;
 export type Board=Cell[][];
 export type Piece={type:Tetromino;rotation:Rotation;x:number;y:number};
 export type GameStatus="playing"|"paused"|"gameover";
-export type TetrisState={board:Board;active:Piece;queue:Tetromino[];hold:Tetromino|null;canHold:boolean;score:number;lines:number;level:number;status:GameStatus;seed:number;lockResets:number;entryBlocked:boolean;lastMoveWasRotation:boolean;combo:number;backToBack:boolean;judgement:string|null;judgementId:number};
+export type TetrisState={board:Board;active:Piece;queue:Tetromino[];hold:Tetromino|null;canHold:boolean;score:number;lines:number;level:number;status:GameStatus;seed:number;lockResets:number;entryBlocked:boolean;lastMoveWasRotation:boolean;combo:number;backToBack:boolean;judgement:string|null;judgementId:number;lineClearPending:boolean;clearedRows:number[];lockId:number};
 export type TetrisAction=
   |{type:"MOVE";dx:-1|1}
   |{type:"ROTATE";direction:1|-1}
@@ -16,6 +16,7 @@ export type TetrisAction=
   |{type:"HARD_DROP"}
   |{type:"TICK"}
   |{type:"LOCK"}
+  |{type:"CLEAR_COMPLETE"}
   |{type:"TOP_OUT"}
   |{type:"HOLD"}
   |{type:"TOGGLE_PAUSE"}
@@ -67,7 +68,7 @@ function takeNext(queue:Tetromino[],seed:number){const filled=fillQueue(queue,se
 
 export function createTetrisState(seed=Date.now()):TetrisState{
   const next=takeNext([],seed>>>0);
-  return{board:createBoard(),active:next.piece,queue:next.queue,hold:null,canHold:true,score:0,lines:0,level:1,status:"playing",seed:next.seed,lockResets:0,entryBlocked:false,lastMoveWasRotation:false,combo:-1,backToBack:false,judgement:null,judgementId:0};
+  return{board:createBoard(),active:next.piece,queue:next.queue,hold:null,canHold:true,score:0,lines:0,level:1,status:"playing",seed:next.seed,lockResets:0,entryBlocked:false,lastMoveWasRotation:false,combo:-1,backToBack:false,judgement:null,judgementId:0,lineClearPending:false,clearedRows:[],lockId:0};
 }
 
 function rotate(board:Board,piece:Piece,direction:1|-1,rescue=false){
@@ -83,7 +84,7 @@ function merge(board:Board,piece:Piece){
   for(const{x,y}of pieceCells(piece)){if(y<0){topOut=true;continue}if(y<BOARD_HEIGHT&&x>=0&&x<BOARD_WIDTH)next[y][x]=piece.type}
   return{board:next,topOut};
 }
-function clearLines(board:Board){const kept=board.filter(row=>row.some(cell=>cell===null)),cleared=BOARD_HEIGHT-kept.length;return{board:[...Array.from({length:cleared},()=>Array<Cell>(BOARD_WIDTH).fill(null)),...kept],cleared}}
+function clearLines(board:Board){const rows=board.flatMap((row,index)=>row.every(Boolean)?[index]:[]),kept=board.filter(row=>row.some(cell=>cell===null)),cleared=rows.length;return{board:[...Array.from({length:cleared},()=>Array<Cell>(BOARD_WIDTH).fill(null)),...kept],cleared,rows}}
 function isTSpin(board:Board,piece:Piece,lastMoveWasRotation:boolean){
   if(piece.type!=="T"||!lastMoveWasRotation)return false;
   const centerX=piece.x+1,centerY=piece.y+1;
@@ -94,15 +95,16 @@ function lock(state:TetrisState,dropScore=0):TetrisState{
   const difficult=cleared.cleared===4||(tSpin&&cleared.cleared>0),baseScore=tSpin?([400,800,1200,1600][cleared.cleared]||0):([0,100,300,500,800][cleared.cleared]||0),backToBackBonus=difficult&&state.backToBack?1.5:1,combo=cleared.cleared>0?state.combo+1:-1,comboScore=Math.max(0,combo)*50*state.level,lineScore=Math.floor(baseScore*state.level*backToBackBonus)+comboScore;
   const clearName=tSpin?(cleared.cleared?`T-SPIN ${["","SINGLE","DOUBLE","TRIPLE"][cleared.cleared]}`:"T-SPIN"):(cleared.cleared===4?"TETRIS":cleared.cleared?(["","SINGLE","DOUBLE","TRIPLE"][cleared.cleared]||null):null),judgement=[difficult&&state.backToBack?"BACK-TO-BACK":null,clearName,combo>0?`COMBO ${combo+1}`:null].filter(Boolean).join("|")||null;
   const next=takeNext(state.queue,state.seed),entryBlocked=!canPlace(cleared.board,next.piece),status=merged.topOut?"gameover":"playing",backToBack=difficult?true:cleared.cleared>0?false:state.backToBack;
-  return{...state,board:cleared.board,active:next.piece,queue:next.queue,seed:next.seed,canHold:true,score:state.score+dropScore+lineScore,lines:totalLines,level,status,lockResets:0,entryBlocked:status==="playing"&&entryBlocked,lastMoveWasRotation:false,combo,backToBack,judgement,judgementId:judgement?state.judgementId+1:state.judgementId};
+  return{...state,board:cleared.board,active:next.piece,queue:next.queue,seed:next.seed,canHold:true,score:state.score+dropScore+lineScore,lines:totalLines,level,status,lockResets:0,entryBlocked:status==="playing"&&entryBlocked,lastMoveWasRotation:false,combo,backToBack,judgement,judgementId:judgement?state.judgementId+1:state.judgementId,lineClearPending:cleared.cleared>0,clearedRows:cleared.rows,lockId:state.lockId+1};
 }
 
 export function tetrisReducer(state:TetrisState,action:TetrisAction):TetrisState{
   if(action.type==="RESET")return createTetrisState(action.seed);
+  if(action.type==="CLEAR_COMPLETE")return state.lineClearPending?{...state,lineClearPending:false,clearedRows:[]}:state;
   if(action.type==="TOGGLE_PAUSE")return state.status==="gameover"?state:{...state,status:state.status==="paused"?"playing":"paused"};
   if(action.type==="PAUSE")return state.status==="playing"?{...state,status:"paused"}:state;
   if(action.type==="TOP_OUT")return state.entryBlocked?{...state,status:"gameover",entryBlocked:false}:state;
-  if(state.status!=="playing")return state;
+  if(state.status!=="playing"||state.lineClearPending)return state;
   if(action.type==="MOVE"){const active={...state.active,x:state.active.x+action.dx};if(state.entryBlocked){const conflicts=placementConflicts(state.board,active);if(conflicts>placementConflicts(state.board,state.active))return state;return{...state,active,entryBlocked:conflicts>0,lockResets:0,lastMoveWasRotation:false}}if(!canPlace(state.board,active))return state;const wasGrounded=!canPlace(state.board,{...state.active,y:state.active.y+1}),isGrounded=!canPlace(state.board,{...active,y:active.y+1});return{...state,active,lockResets:isGrounded&&wasGrounded?Math.min(LOCK_RESET_LIMIT,state.lockResets+1):0,lastMoveWasRotation:false}}
   if(action.type==="ROTATE"){const active=rotate(state.board,state.active,action.direction,state.entryBlocked);if(active===state.active)return state;if(state.entryBlocked){const conflicts=placementConflicts(state.board,active);return{...state,active,entryBlocked:conflicts>0,lockResets:0,lastMoveWasRotation:true}}const wasGrounded=!canPlace(state.board,{...state.active,y:state.active.y+1}),isGrounded=!canPlace(state.board,{...active,y:active.y+1});return{...state,active,lockResets:isGrounded&&wasGrounded?Math.min(LOCK_RESET_LIMIT,state.lockResets+1):0,lastMoveWasRotation:true}}
   if(action.type==="SOFT_DROP"){const active={...state.active,y:state.active.y+1};return canPlace(state.board,active)?{...state,active,score:state.score+1,lockResets:0,entryBlocked:false}:state}

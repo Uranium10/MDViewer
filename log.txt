@@ -238,3 +238,14 @@
 - 상단 status bar와 하단 toolbar 내부 콘텐츠에만 좌우 safe-area inset 적용
 - 상단 drawer swipe 시작 판정 영역을 54px에서 72px로 확대하고 open/close 이동 임계값을 70px에서 56px로 완화
 - 펼쳐진 drawer 하단 handle 높이를 46px에서 54px로 확대해 swipe-up 조작 안정성 개선
+
+[Tetris horizontal score strip - 2026-08-23]
+- SCORE/LINES/LV를 좁은 side panel에서 제거하고 game stage 상단 전체 폭의 1행 strip으로 이동
+- SCORE에 2배 폭, LINES/LV에 동일 폭을 배분하고 black border separator 적용
+- HOLD/NEXT side panel은 score strip 아래에서 시작하도록 정렬
+- 작은 viewport에서 board가 상단 score strip과 겹치지 않도록 dvh/cqh 높이 제한에 56px 반영
+- line clear 직후 완성 행 위치에 420ms overlay를 유지하고 두 차례 e-ink step blink 연출 추가
+- line clear 연출 중 gravity, lock timer, keyboard reducer action 및 touch gesture를 잠가 짧은 hit-stop 구현
+- blink 종료 후 CLEAR_COMPLETE action으로 입력과 다음 block 진행을 재개
+- block lock마다 증가하는 lockId에만 18ms 단발 Vibration API feedback 연결
+- line-clear pending/점멸과 haptic trigger를 분리하고 cleanup에서 vibrate(0)을 호출해 지속 진동 방지
