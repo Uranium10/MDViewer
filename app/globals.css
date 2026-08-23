@@ -32,7 +32,8 @@ html{view-transition-name:none;--page-turn-duration:300ms}.page-paper{view-trans
 .ebook-device .library-toolbar span{font-size:14px;letter-spacing:.04em;transition:letter-spacing 120ms ease}
 @media(hover:hover){.ebook-device .library-toolbar button:hover:not(:disabled){transform:translateY(-5px);background:#172a2d0c}.ebook-device .library-toolbar button:hover:not(:disabled) .pixel-icon{transform:scale(1.48);filter:drop-shadow(3px 3px 0 #172a2d24)}.ebook-device .library-toolbar button:hover:not(:disabled) span{letter-spacing:.1em}}
 .library-loading{bottom:0}
-@media(max-width:520px){.ebook-device .library-toolbar{width:min(310px,82vw)!important}}
+.mobile-open-copy{display:none}
+@media(max-width:520px){.ebook-device .library-toolbar{width:min(310px,82vw)!important}.open-book-primary .open-copy,.open-book-primary>small{display:none}.open-book-primary .mobile-open-copy{display:block;font:750 15px/1.45 var(--ui-font);letter-spacing:-.02em}.resume-book{top:clamp(340px,52%,405px)}}
 .reader-help .icon-help{display:none}.reader-help:before{content:"?";width:22px;height:22px;border:2px solid currentColor;display:grid;place-items:center;font:900 15px/1 ui-monospace,monospace}
 .library-status .reader-help[aria-expanded="true"]:before,.reader-status .reader-help[aria-expanded="true"]:before{background:#edf0e7;color:#13272a;box-shadow:inset 0 0 0 1px #13272a}
 .toolbar-share-icon{display:block;width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:square;stroke-linejoin:miter}

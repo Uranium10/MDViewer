@@ -144,6 +144,7 @@ export default function EditorWorkspace() {
         <strong>{dragging ? "여기에 놓으세요" : "열기"}</strong>
         <span className="open-copy">{dragging ? "파일을 놓으면 바로 열립니다" : "누르거나 파일을 끌어다 놓으세요"}</span>
         <small>복사한 텍스트는 화면 어디서나 붙여넣을 수 있어요</small>
+        <span className="mobile-open-copy">눌러서 파일을 여세요</span>
       </button>{recent&&<button className="resume-book" onClick={()=>void resumeRecent()} aria-label={`${recent.filename}, ${recent.currentPage} / ${recent.totalPages} 페이지부터 이어읽기`}><span>이어읽기</span><strong title={recent.filename}>{recent.filename}</strong><small>{recent.currentPage} / {recent.totalPages} 페이지</small></button>}</div><nav className="feature-toolbar library-toolbar" aria-label="시작 화면 메뉴"><LibraryTool icon="share" label="공유" onClick={shareApp}/><LibraryTool icon="memo" label="메모" disabled/><LibraryTool icon="tetris" label="게임" onClick={openGame}/></nav>{loading&&<div className="library-loading" role="status"><strong>{loading.label}</strong><div><span style={{width:`${loading.progress}%`}}/></div><small>{loading.progress}%</small></div>}{libraryGuide&&<ReaderGuidebook onBack={closeLibraryGuide}/>} {libraryShare&&<ReaderSharePanel title="MD북스" onCreateShare={async()=>location.href} onClose={()=>setLibraryShare(false)} modal copySuccess="MD북스를 공유해줘서 고마워요."/>}</>}
       <input ref={inputRef} hidden type="file" accept=".md,.txt,text/markdown,text/plain" onChange={(e) => void openFile(e.target.files?.[0])}/>
     </section>

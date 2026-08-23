@@ -252,3 +252,6 @@
 
 [Codex - shared reader close navigation - 2026-08-23]
 - Changed the shared-reader close action to always navigate to the MD Books home route instead of using browser history.
+
+[Codex - mobile library spacing - 2026-08-23]
+- Replaced the two-line mobile open guidance with a compact tap instruction and moved the recent-book card upward to prevent toolbar overlap.
