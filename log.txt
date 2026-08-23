@@ -249,3 +249,6 @@
 - blink 종료 후 CLEAR_COMPLETE action으로 입력과 다음 block 진행을 재개
 - block lock마다 증가하는 lockId에만 18ms 단발 Vibration API feedback 연결
 - line-clear pending/점멸과 haptic trigger를 분리하고 cleanup에서 vibrate(0)을 호출해 지속 진동 방지
+
+[Codex - shared reader close navigation - 2026-08-23]
+- Changed the shared-reader close action to always navigate to the MD Books home route instead of using browser history.
