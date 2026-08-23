@@ -133,3 +133,11 @@
 - 텍스트가 종이와 함께 이동하고 전환 절반 이후 opacity가 감소하도록 조정
 - keyboard/tap 전환의 짧은 anticipation을 제거하고 전체 애니메이션을 300ms 고정 재생
 - View Transition 미지원 브라우저 fallback도 300ms로 통일
+
+[Reader controls and transition isolation - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 다크모드 토글을 quick drawer 가로 중앙에 배치하고 '화면 밝기' 문구 제거
+- 테마 전환 클릭에 public/lock.mp3 재생 연결
+- 기존 corner-fold 효과를 active render/rAF 경로에서 제거하고 components/reader/legacy로 격리
+- page-paper를 상태 바(44px)와 하단 toolbar(74px) 사이 전체 종이 면으로 확장
+- View Transition group과 image pair를 overflow:clip으로 제한해 상·하단 인터페이스 침범 방지

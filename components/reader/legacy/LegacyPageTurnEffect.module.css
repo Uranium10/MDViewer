@@ -1,0 +1,7 @@
+.effect{position:absolute;z-index:13;inset:74px 24px 112px;pointer-events:none;overflow:hidden;contain:strict;transform:translateZ(0)}
+.fromLeft{transform:scaleX(-1) translateZ(0)}
+.effect i,.effect b{position:absolute;inset:0;display:block;transform-origin:100% 100%;transform:scale(var(--legacy-turn));clip-path:polygon(100% 0,100% 100%,0 100%)}
+.effect i{background:linear-gradient(135deg,transparent 0 46%,#15292c 47% 48%,#b9beb6 49% 57%,#eef0e7 58% 100%);box-shadow:-7px -7px 12px #14262935}
+.effect b{opacity:.15;background:radial-gradient(circle at 75% 80%,#142629 0 1px,transparent 1.5px);background-size:5px 5px}
+:global(.theme-dark) .effect i{background:linear-gradient(135deg,transparent 0 46%,#dfe4db 47% 48%,#455052 49% 57%,#1d292b 58% 100%)}
+:global(.theme-dark) .effect b{opacity:.1}
