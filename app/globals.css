@@ -37,6 +37,7 @@ html{view-transition-name:none;--page-turn-duration:300ms}.page-paper{view-trans
 .reader-help .icon-help{display:none}.reader-help:before{content:"?";width:22px;height:22px;border:2px solid currentColor;display:grid;place-items:center;font:900 15px/1 ui-monospace,monospace}
 .library-status .reader-help[aria-expanded="true"]:before,.reader-status .reader-help[aria-expanded="true"]:before{background:#edf0e7;color:#13272a;box-shadow:inset 0 0 0 1px #13272a}
 .toolbar-share-icon{display:block;width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:square;stroke-linejoin:miter}
+.icon-docx{display:grid!important;place-items:center;font:900 10px/1 ui-monospace,monospace}
 .page-navigation{transform-origin:bottom;transition:height 140ms cubic-bezier(.2,.8,.25,1),background-color 140ms ease,box-shadow 140ms ease}
 .page-navigation.is-scrubbing{height:64px;box-shadow:0 -5px 0 #16252712}
 .page-navigation.is-scrubbing .page-indicator{top:5px}

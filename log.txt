@@ -258,3 +258,6 @@
 
 [Codex - continuous line clear - 2026-08-23]
 - Simplified line clearing to one 150ms flash and removed the gravity, lock, keyboard, and touch input pause during the effect.
+
+[Codex - DOCX export - 2026-08-23]
+- Added a lazily loaded browser-side DOCX exporter with Markdown headings, inline styles, lists, quotes, code blocks, tables, links, and safe file downloads.
