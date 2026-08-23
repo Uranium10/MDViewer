@@ -141,3 +141,13 @@
 - 기존 corner-fold 효과를 active render/rAF 경로에서 제거하고 components/reader/legacy로 격리
 - page-paper를 상태 바(44px)와 하단 toolbar(74px) 사이 전체 종이 면으로 확장
 - View Transition group과 image pair를 overflow:clip으로 제한해 상·하단 인터페이스 침범 방지
+
+[Page navigation and guidebook - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- page number와 progress control을 회전 snapshot 밖의 고정 navigation layer로 분리
+- native range 기반 좌우 scrub과 requestAnimationFrame 제한으로 빠른 페이지 탐색 구현
+- page number 클릭 시 숫자 입력, Enter/blur 이동 및 유효 페이지 범위 보정
+- 상단 progress percentage를 도움말 아이콘으로 교체
+- 현재 Reader를 유지한 overlay guidebook과 History API 기반 뒤로가기 복귀 구현
+- live dev server와 충돌하지 않는 typecheck/source lint 통과, server HTTP 200 확인
+- ESLint가 .next 생성물을 검사하지 않도록 ignore 범위 보정
