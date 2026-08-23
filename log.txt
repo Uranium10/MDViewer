@@ -230,3 +230,11 @@
 - 이어읽기 선택 시 저장 원문과 기존 reader-session progress를 함께 복원
 - paginated mode는 실제 page index/count, scroll mode는 viewport 기준 virtual page index/count 기록
 - reader session을 불러온 뒤 본문을 mount하도록 순서를 조정해 초기 progress 0이 저장 위치를 덮는 문제 방지
+
+[Mobile edge-to-edge viewport - 2026-08-23]
+- 후순위 coarse-pointer media query가 되살리던 16px device-stage padding 제거
+- 모바일/touch viewport에서 ebook-device를 100% 폭·높이로 확장하고 frame border/radius/shadow 제거
+- html/body/device-stage 배경을 reader paper 색으로 통일해 browser viewport 경계의 이색 띠 방지
+- 상단 status bar와 하단 toolbar 내부 콘텐츠에만 좌우 safe-area inset 적용
+- 상단 drawer swipe 시작 판정 영역을 54px에서 72px로 확대하고 open/close 이동 임계값을 70px에서 56px로 완화
+- 펼쳐진 drawer 하단 handle 높이를 46px에서 54px로 확대해 swipe-up 조작 안정성 개선
