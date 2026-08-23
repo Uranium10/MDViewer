@@ -21,7 +21,7 @@ export default function ScrollReader({markdown,progress,onProgress,restore}:Prop
       const next=max>0?node.scrollTop/max:0;
       if(progressLine.current)progressLine.current.style.transform=`scaleX(${next})`;
       const now=performance.now();
-      if(now-lastEmit>=100){lastEmit=now;onProgressRef.current(next)}
+      if(now-lastEmit>=200){lastEmit=now;onProgressRef.current(next)}
       if(trailing)clearTimeout(trailing);
       trailing=setTimeout(()=>onProgressRef.current(next),120);
     };

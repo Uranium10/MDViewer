@@ -83,3 +83,23 @@
 - Reader 영역에 layout/paint containment 및 overscroll containment 추가
 - 120개 장 로컬 fixture, 390x844 headless Chrome production 화면 검증 (HTTP 200)
 - 점검 중 발견한 한국어 좁은 화면 줄 잘림과 하단 4열 toolbar overflow 함께 수정
+
+[MD북스 UX/SEO 및 전환 효과 개선 - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 애플리케이션 명칭을 MD북스로 변경하고 MDViewer/Ebook Reader 설명 및 검색 키워드 적용
+- metadataBase, canonical, Open Graph, Twitter metadata, viewport theme color 구성
+- /sitemap.xml, /robots.txt, /manifest.webmanifest Next.js metadata route 추가
+- 초기 파일 열기 화면에도 MD북스/현재 시각/공유 버튼이 있는 검정 상태 바 추가
+- Reader 외부 영역의 text selection 및 native drag 시작 봉쇄, 본문 선택은 유지
+- 페이지 본문 slide와 corner curl의 중복 애니메이션 제거
+- 본문은 고정한 채 작은 overlay 합성 레이어만 transform하는 compact page-fold 효과로 교체
+- 확정 전환 중간점에서 페이지를 즉시 교체해 긴 multi-column DOM animation 방지
+- public/page.mp3 사전 로드, 사용자 gesture로 확정된 페이지 전환에서만 낮은 볼륨 재생
+- reduced-motion 환경에서는 전환 animation 생략
+- 상단 설정 drawer handle을 최하단으로 이동
+- ReaderSettings를 React.memo 처리하고 callback identity를 고정해 progress 변경 시 숨은 설정 폼 재렌더 방지
+- drawer에 layout/paint containment 및 drag 중 transition/그림자 제거 적용
+- scroll progress 상위 React 전달 주기를 200ms로 낮춰 장시간 스크롤 부하 추가 감소
+- 공유 작업 완료/취소 시 '공유 링크를 만드는 중…' 상태를 즉시 제거하고 성공 안내는 자동 소멸
+- package/run.bat 표시 이름을 MD Books로 변경
+- production build 성공, 홈/robots/sitemap/manifest HTTP 200 및 MD북스·MDViewer metadata 확인
