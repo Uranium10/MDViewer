@@ -255,3 +255,6 @@
 
 [Codex - mobile library spacing - 2026-08-23]
 - Replaced the two-line mobile open guidance with a compact tap instruction and moved the recent-book card upward to prevent toolbar overlap.
+
+[Codex - continuous line clear - 2026-08-23]
+- Simplified line clearing to one 150ms flash and removed the gravity, lock, keyboard, and touch input pause during the effect.
