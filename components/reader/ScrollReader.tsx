@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 import MarkdownRenderer from "./MarkdownRenderer";
 
-type Props={markdown:string;progress:number;onProgress:(n:number)=>void;restore:number};
-export default function ScrollReader({markdown,progress,onProgress,restore}:Props){
+type Props={markdown:string;progress:number;onProgress:(n:number)=>void;restore:number;onPageChange?:(current:number,total:number)=>void};
+export default function ScrollReader({markdown,progress,onProgress,restore,onPageChange}:Props){
   const scroller=useRef<HTMLElement>(null);
   const progressLine=useRef<HTMLDivElement>(null);
   const initialRestore=useRef(restore);
   const onProgressRef=useRef(onProgress);
-  onProgressRef.current=onProgress;
+  const onPageChangeRef=useRef(onPageChange);
+  onProgressRef.current=onProgress;onPageChangeRef.current=onPageChange;
 
   useEffect(()=>{
     const node=scroller.current;
@@ -19,9 +20,11 @@ export default function ScrollReader({markdown,progress,onProgress,restore}:Prop
       frame=null;
       const max=node.scrollHeight-node.clientHeight;
       const next=max>0?node.scrollTop/max:0;
+      const total=Math.max(1,Math.ceil(node.scrollHeight/Math.max(1,node.clientHeight))),current=Math.min(total,Math.floor(node.scrollTop/Math.max(1,node.clientHeight))+1);
       if(progressLine.current)progressLine.current.style.transform=`scaleX(${next})`;
       const now=performance.now();
       if(now-lastEmit>=200){lastEmit=now;onProgressRef.current(next)}
+      onPageChangeRef.current?.(current,total);
       if(trailing)clearTimeout(trailing);
       trailing=setTimeout(()=>onProgressRef.current(next),120);
     };

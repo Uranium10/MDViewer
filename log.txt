@@ -165,3 +165,68 @@
 - 전체 Markdown은 PDF 요청 시에만 print DOM으로 생성해 평상시 render 비용 차단
 - TypeScript noEmit 및 ESLint 통과, 초기/공유 화면 headless Chrome 렌더 확인
 - 기존 공유 문서 연속 2회 요청에서 reused=true 및 동일 canonical ID 반환 확인
+
+[Compact library icon menu - 2026-08-23]
+- 작업 에이전트: Codex (/root)
+- 초기 화면의 전체 폭 하단 툴바를 화면 안쪽의 작은 3개 아이콘 런처로 변경
+- 공유/메모/게임 라벨을 짧게 정리하고 아이콘 버튼의 테두리 및 배경 패널 제거
+- 마우스 환경에서만 아이콘 상승, 확대, 농도 변화가 적용되는 가벼운 hover 피드백 추가
+- 클릭 시 1px 눌림 효과와 키보드 focus-visible 표시 유지
+- TypeScript noEmit, ESLint 및 실행 중인 홈 화면 HTTP 200 확인
+- 후속 조정: 열기 표시를 축소해 위로 이동하고 하단 아이콘 크기와 터치 영역 확대
+- 기기 화면 전체에서 .md/.txt 파일 및 일반 텍스트 drop을 처리하도록 이벤트 범위 확장
+- 상단 설정 drawer를 도움말보다 높은 layer로 이동하고, 하단 handle의 swipe-up 닫기 차단 조건 수정
+- 도움말 버튼을 열기/닫기 toggle로 통일하고 History 기반 복귀 상태 유지
+- 테마 버튼 문구를 밝게/어둡게로 변경
+- 초기 아이콘을 크게 확대해 하단 중앙으로 이동하고, 상용 UI 톤의 클릭/drop/paste 안내 문구 적용
+- 초기 하단 아이콘 묶음을 위로 이동하고 아이콘/라벨 사이의 수직 여백 확대
+- 열기 라벨을 간결하게 변경하고 십자 아이콘을 점선 원형 affordance 안에 배치
+- 도움말 활성 상태에 상단 버튼 명암 반전 피드백 추가
+- Reader 하단 공유 아이콘을 굵은 forward/share 화살표 SVG로 교체
+- slider 조작 중 navigation 확장, 오각형 bookmark 위치 marker 및 현재 marker 강조 구현
+- coarse pointer 환경에서 가까운 bookmark 페이지로 1~3 page magnetic snap 적용
+
+[Updated implementation queue - 2026-08-23]
+- browser confirm을 제거하고 계속 읽기/책 닫기를 고르는 e-ink device 내부 alert dialog 구현
+- 도움말 활성 반전을 외부 42px button이 아닌 내부 ? glyph box로 한정
+- 왼쪽의 굵은 drawer 암시 glyph를 제거하고 제목 위에 1px 두께의 긴 shallow chevron 배치
+- 초기 공유를 링크 복사/기기 공유 선택 modal로 변경하고 복사 성공 감사 문구 추가
+- 공유 성공 감사/status 문구는 1.8초, 오류 문구는 2.6초 후 자동 제거
+
+[E-ink Tetris - 2026-08-23]
+- 10x20 board, deterministic 7-bag, SRS wall kick, ghost, next queue 및 1회 hold 구현
+- single/double/triple/Tetris guideline score, soft/hard drop score, 10 line 단위 level 상승 구현
+- guideline gravity curve, 500ms lock delay 및 최대 15회 move/rotation reset 적용
+- tap 회전, cell 단위 좌우/아래 drag, 짧고 빠른 downward flick hard drop 구현
+- hold panel 직접 터치, keyboard 방향키/Z/X/Space/C/P 조작 지원
+- e-ink black separated block UI, pause/game over overlay, 뒤로/일시정지/기록 toolbar 구현
+- localStorage 기반 상위 10개 기록과 브라우저 비활성화 시 자동 pause 구현
+- 보드는 1:2 비율 및 dvh/vw 동시 제한으로 작은 모바일에서도 정사각 cell 유지
+- engine simulation으로 7-bag 재현성, hold lock, hard drop, line clear/level 상승, 500ms lock 경로 및 15회 reset cap 확인
+- moving piece/ghost는 4-cell overlay, settled 200-cell board는 memo 격리해 gesture 중 전체 board 재렌더 방지
+- keyboard DAS를 OS repeat에서 game timer로 분리: 좌우 110ms 진입/34ms 반복, soft drop 80ms 진입/28ms 반복
+- 반대 방향 동시 입력 fallback과 keyup/window blur timer cleanup 구현
+- spawn collision 즉시 gameover를 제거하고 850ms entry rescue window 추가
+- entry overlap이 악화되지 않는 이동/SRS 회전을 허용하고 valid position 탈출 시 정상 gravity/lock 복귀
+- rescue 중 hard drop/lock을 차단하고 MOVE ROTATE 경고를 표시해 조작 가능 상태를 명확화
+- engine simulation으로 floor I kick, wall T kick, 상단 2-step 이동 탈출, rotation 탈출 및 delayed top-out 확인
+- mobile screen에서 html/body scroll 및 overscroll을 잠그고 device-stage를 stable 100svh frame에 고정
+- viewport-fit=cover와 safe-area padding 적용, 실제 reader/panel 내부 scroll만 유지
+- Tetris board 크기를 container query height(cqh) 기준으로 계산해 browser chrome 변화 시 board reflow 방지
+- coarse touch landscape/tablet에도 fixed frame을 적용하고 넓은 화면에서는 device 폭을 430px로 제한해 book ratio 유지
+
+[Tetris playfield & judgement polish - 2026-08-23]
+- 게임 보드를 최대 285px까지 확대하고 stage 하단 여백을 3px로 줄여 toolbar 바로 위에 밀착
+- HOLD/NEXT 보조 패널 폭과 mini block preview를 축소하고 조작 설명 문구 제거
+- 상단 black status bar에서 SCORE/LINES/LV를 분리해 왼쪽의 black border score panel로 이동
+- 실제 4-line clear, T 중심 corner/last-rotation 기반 T-Spin, Back-to-Back 및 combo 판정/점수 구현
+- 판정 결과를 board 위에 1.35초 동안 단계형 pixel text animation으로 표시
+- lock delay를 500ms에서 650ms로, grounded move/rotation reset 상한을 15회에서 24회로 확장
+- engine simulation으로 Tetris 800점, B2B Tetris 1.5배+combo, T-Spin 400점 및 24회 reset cap 확인
+
+[Recent reading card - 2026-08-23]
+- 초기 열기 안내 아래에 이어읽기/파일명/현재·전체 페이지를 표시하는 e-ink recent card 추가
+- recent 원문 한 권은 IndexedDB, 작은 page metadata는 localStorage에 분리 저장해 긴 문서 quota 부담 완화
+- 이어읽기 선택 시 저장 원문과 기존 reader-session progress를 함께 복원
+- paginated mode는 실제 page index/count, scroll mode는 viewport 기준 virtual page index/count 기록
+- reader session을 불러온 뒤 본문을 mount하도록 순서를 조정해 초기 progress 0이 저장 위치를 덮는 문제 방지

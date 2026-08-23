@@ -14,5 +14,5 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   category: "technology",
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, colorScheme: "light dark", themeColor: [{media:"(prefers-color-scheme: light)",color:"#13272a"},{media:"(prefers-color-scheme: dark)",color:"#050707"}] };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit:"cover", colorScheme: "light dark", themeColor: [{media:"(prefers-color-scheme: light)",color:"#13272a"},{media:"(prefers-color-scheme: dark)",color:"#050707"}] };
 export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="ko" suppressHydrationWarning><body>{children}</body></html>}

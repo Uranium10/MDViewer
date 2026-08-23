@@ -3,10 +3,13 @@
 import { DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import NovelReader from "@/components/reader/NovelReader";
 import ReaderGuidebook from "@/components/reader/ReaderGuidebook";
+import ReaderSharePanel from "@/components/reader/ReaderSharePanel";
+import EInkTetris from "@/components/game/EInkTetris";
 import { inferTitle } from "@/lib/markdown";
 import { createContentId } from "@/lib/content-id";
+import { loadRecentDocument, readRecentMeta, saveRecentDocument, writeRecentMeta, type RecentDocument, type RecentDocumentMeta } from "@/lib/recent-document";
 
-type LocalDocument={id:string;title:string;markdown:string};
+type LocalDocument={id:string;title:string;filename:string;markdown:string};
 type LoadingState={progress:number;label:string}|null;
 const nextPaint=()=>new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
 
@@ -16,17 +19,21 @@ export default function EditorWorkspace() {
   const [message, setMessage] = useState("");
   const [clock, setClock] = useState("--:--");
   const [loading,setLoading]=useState<LoadingState>(null);
-  const [libraryGuide,setLibraryGuide]=useState(false);
+  const [recent,setRecent]=useState<RecentDocumentMeta|null>(null);
+  const [libraryGuide,setLibraryGuide]=useState(false),[libraryShare,setLibraryShare]=useState(false),[gameOpen,setGameOpen]=useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const sharing = useRef(false);
   const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recentWriteTimer=useRef<ReturnType<typeof setTimeout>|null>(null),recentDocument=useRef<RecentDocument|null>(null),recentMeta=useRef<RecentDocumentMeta|null>(null);
 
   useEffect(() => {
     const update = () => setClock(new Intl.DateTimeFormat("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()));
     update();
     const timer = setInterval(update, 30_000);
-    return () => { clearInterval(timer); if (messageTimer.current) clearTimeout(messageTimer.current); };
+    return () => { clearInterval(timer); if (messageTimer.current) clearTimeout(messageTimer.current); if(recentWriteTimer.current)clearTimeout(recentWriteTimer.current); };
   }, []);
+
+  useEffect(()=>{let cancelled=false;const meta=readRecentMeta();void loadRecentDocument().then(saved=>{if(cancelled||!saved||!meta||saved.id!==meta.id)return;recentDocument.current=saved;recentMeta.current=meta;setRecent(meta)}).catch(()=>{});return()=>{cancelled=true}},[]);
 
   const flash = useCallback((text: string, duration = 1800) => {
     if (messageTimer.current) clearTimeout(messageTimer.current);
@@ -39,7 +46,8 @@ export default function EditorWorkspace() {
     if(showProgress){setLoading({progress:92,label:"책 구성 중"});await nextPaint()}
     const id=await createContentId(markdown);
     if(showProgress){setLoading({progress:100,label:"책 준비 완료"});await nextPaint()}
-    setDocument({id,title:inferTitle(markdown,filename),markdown});
+    const next={id,title:inferTitle(markdown,filename),filename,markdown},savedMeta=readRecentMeta(),meta=savedMeta?.id===id?savedMeta:{id,title:next.title,filename,currentPage:1,totalPages:1,updatedAt:Date.now()};
+    recentDocument.current=next;recentMeta.current=meta;setRecent(meta);writeRecentMeta(meta);void saveRecentDocument(next).catch(()=>{});setDocument(next);
     setLoading(null);setMessage("");
   },[]);
 
@@ -71,18 +79,21 @@ export default function EditorWorkspace() {
     }
   };
 
-  useEffect(()=>{if(document||loading||libraryGuide)return;const paste=(event:ClipboardEvent)=>{if((event.target as HTMLElement|null)?.closest("input,textarea,[contenteditable=true]"))return;const text=event.clipboardData?.getData("text/plain")||"";if(!text.trim())return;event.preventDefault();void openPastedText(text)};addEventListener("paste",paste);return()=>removeEventListener("paste",paste)},[document,libraryGuide,loading,openPastedText]);
+  useEffect(()=>{if(document||loading||libraryGuide||libraryShare||gameOpen)return;const paste=(event:ClipboardEvent)=>{if((event.target as HTMLElement|null)?.closest("input,textarea,[contenteditable=true]"))return;const text=event.clipboardData?.getData("text/plain")||"";if(!text.trim())return;event.preventDefault();void openPastedText(text)};addEventListener("paste",paste);return()=>removeEventListener("paste",paste)},[document,gameOpen,libraryGuide,libraryShare,loading,openPastedText]);
   useEffect(()=>{const pop=(event:PopStateEvent)=>setLibraryGuide(Boolean(event.state?.mdBooksLibraryGuide));addEventListener("popstate",pop);return()=>removeEventListener("popstate",pop)},[]);
 
   const drop = (event: DragEvent) => {
     event.preventDefault();
     setDragging(false);
-    void openFile(event.dataTransfer.files[0]);
+    const file=event.dataTransfer.files[0];
+    if(file){void openFile(file);return}
+    const text=event.dataTransfer.getData("text/plain");
+    if(text.trim())void openPastedText(text);
   };
 
-  const leaveReader = () => {
-    if (window.confirm("책을 닫고 처음 화면으로 나가시겠습니까?")) setDocument(null);
-  };
+  const updateRecentPage=useCallback((id:string,currentPage:number,totalPages:number)=>{const current=recentMeta.current;if(!current||current.id!==id)return;const next={...current,currentPage:Math.max(1,currentPage),totalPages:Math.max(1,totalPages),updatedAt:Date.now()};recentMeta.current=next;if(recentWriteTimer.current)clearTimeout(recentWriteTimer.current);recentWriteTimer.current=setTimeout(()=>writeRecentMeta(next),220)},[]);
+  const leaveReader = () => {if(recentMeta.current){writeRecentMeta(recentMeta.current);setRecent(recentMeta.current)}setDocument(null)};
+  const resumeRecent=async()=>{try{const saved=recentDocument.current||await loadRecentDocument();if(!saved||!recent||saved.id!==recent.id)throw new Error("이어 읽을 문서를 찾지 못했습니다.");recentDocument.current=saved;setDocument(saved);setMessage("")}catch(error){flash(error instanceof Error?error.message:"문서를 다시 열지 못했습니다.",2600)}};
 
   const createShareLink = async () => {
     if (!document) return;
@@ -109,36 +120,34 @@ export default function EditorWorkspace() {
     }
   };
 
-  const shareApp = async () => {
-    const data = { title: "MD북스", text: "Markdown과 텍스트를 전자책처럼 읽고 공유하는 MDViewer", url: location.href };
-    try { if (navigator.share) await navigator.share(data); else { await navigator.clipboard.writeText(location.href); flash("MD북스 주소를 복사했습니다."); } } catch {}
-  };
-  const openLibraryGuide=()=>{if(libraryGuide)return;history.pushState({...history.state,mdBooksLibraryGuide:true},"",location.href);setLibraryGuide(true)};
-  const closeLibraryGuide=()=>{if(history.state?.mdBooksLibraryGuide)history.back();else setLibraryGuide(false)};
+  const shareApp = () => setLibraryShare(true);
+  const openGame=()=>{setLibraryGuide(false);setLibraryShare(false);setGameOpen(true)};
+  const openLibraryGuide=()=>{setLibraryShare(false);history.pushState({...history.state,mdBooksLibraryGuide:true},"",location.href);setLibraryGuide(true)};
+  const closeLibraryGuide=()=>{setLibraryGuide(false);if(history.state?.mdBooksLibraryGuide)history.back()};
+  const toggleLibraryGuide=()=>libraryGuide?closeLibraryGuide():openLibraryGuide();
 
   return <main className="device-stage" onDragStart={event => { if (!(event.target as HTMLElement).closest(".ebook-device")) event.preventDefault(); }}>
-    <section className={`ebook-device ${document ? "is-reading" : "is-library"}`}>
-      {!document ? <><header className="library-status"><strong>MD북스</strong><time>{clock}</time><button className="reader-help" onClick={openLibraryGuide} aria-label="MD북스 도움말"><i className="pixel-icon icon-help" aria-hidden="true">?</i></button></header><button
-        className={`open-book ${dragging ? "is-dragging" : ""}`}
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={drop}
-        aria-label="Markdown 또는 텍스트 파일 열기"
-      >
-        <span className="open-cross" aria-hidden="true"><i/><i/></span>
-        <strong>{dragging ? "여기에 놓기" : "열기"}</strong>
-        <small>.md · .txt · Ctrl+V</small>
-      </button><nav className="feature-toolbar library-toolbar" aria-label="시작 화면 메뉴"><LibraryTool icon="share" label="공유하기" onClick={()=>void shareApp()}/><LibraryTool icon="memo" label="메모하기" disabled/><LibraryTool icon="tetris" label="게임하기" disabled/></nav>{loading&&<div className="library-loading" role="status"><strong>{loading.label}</strong><div><span style={{width:`${loading.progress}%`}}/></div><small>{loading.progress}%</small></div>}{libraryGuide&&<ReaderGuidebook onBack={closeLibraryGuide}/>}</> : <NovelReader
+    <section className={`ebook-device ${document ? "is-reading" : gameOpen?"is-game":"is-library"}`} onDragOver={event=>{if(document||libraryGuide||libraryShare||gameOpen)return;event.preventDefault();setDragging(true)}} onDragLeave={event=>{if(document||event.currentTarget.contains(event.relatedTarget as Node))return;setDragging(false)}} onDrop={event=>{if(document||libraryGuide||libraryShare||gameOpen)return;drop(event)}}>
+      {document ? <NovelReader
         documentId={`local:${document.id}`}
         title={document.title}
         markdown={document.markdown}
         onBack={leaveReader}
         onCreateShare={createShareLink}
-      />}
+        onPageChange={(current,total)=>updateRecentPage(document.id,current,total)}
+      /> : gameOpen?<EInkTetris onBack={()=>setGameOpen(false)}/>:<><header className="library-status"><strong>MD북스</strong><time>{clock}</time><button className="reader-help" onClick={toggleLibraryGuide} aria-label={libraryGuide?"MD북스 도움말 닫기":"MD북스 도움말 열기"} aria-expanded={libraryGuide}><i className="pixel-icon icon-help" aria-hidden="true">?</i></button></header><div className={`open-book ${dragging ? "is-dragging" : ""}`}><button
+        className="open-book-primary"
+        onClick={() => inputRef.current?.click()}
+        aria-label="Markdown 또는 텍스트 파일 열기"
+      >
+        <span className="open-cross" aria-hidden="true"><i/><i/></span>
+        <strong>{dragging ? "여기에 놓으세요" : "열기"}</strong>
+        <span className="open-copy">{dragging ? "파일을 놓으면 바로 열립니다" : "누르거나 파일을 끌어다 놓으세요"}</span>
+        <small>복사한 텍스트는 화면 어디서나 붙여넣을 수 있어요</small>
+      </button>{recent&&<button className="resume-book" onClick={()=>void resumeRecent()} aria-label={`${recent.filename}, ${recent.currentPage} / ${recent.totalPages} 페이지부터 이어읽기`}><span>이어읽기</span><strong title={recent.filename}>{recent.filename}</strong><small>{recent.currentPage} / {recent.totalPages} 페이지</small></button>}</div><nav className="feature-toolbar library-toolbar" aria-label="시작 화면 메뉴"><LibraryTool icon="share" label="공유" onClick={shareApp}/><LibraryTool icon="memo" label="메모" disabled/><LibraryTool icon="tetris" label="게임" onClick={openGame}/></nav>{loading&&<div className="library-loading" role="status"><strong>{loading.label}</strong><div><span style={{width:`${loading.progress}%`}}/></div><small>{loading.progress}%</small></div>}{libraryGuide&&<ReaderGuidebook onBack={closeLibraryGuide}/>} {libraryShare&&<ReaderSharePanel title="MD북스" onCreateShare={async()=>location.href} onClose={()=>setLibraryShare(false)} modal copySuccess="MD북스를 공유해줘서 고마워요."/>}</>}
       <input ref={inputRef} hidden type="file" accept=".md,.txt,text/markdown,text/plain" onChange={(e) => void openFile(e.target.files?.[0])}/>
     </section>
-    {!document && <div className="device-caption"><span>MD북스</span><p>Markdown · Text Ebook Reader &amp; Viewer</p></div>}
+    {!document&&!gameOpen&&<div className="device-caption"><span>MD북스</span><p>Markdown · Text Ebook Reader &amp; Viewer</p></div>}
     {message && <div className="device-toast" role="status" onClick={() => setMessage("")}>{message}</div>}
   </main>;
 }
