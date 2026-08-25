@@ -66,4 +66,6 @@ html{view-transition-name:none;--page-turn-duration:300ms}.page-paper{view-trans
 
 .reader-prose pre{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}.page-columns .reader-prose pre{touch-action:pan-x}
 
+.page-viewport{inset:30px 24px}.font-sans .reader-prose em{font-style:italic;letter-spacing:inherit}
+
 @media print{body{background:#fff!important}.device-stage{display:block!important;min-height:0!important;padding:0!important;background:#fff!important}.ebook-device{width:auto!important;height:auto!important;min-height:0!important;border:0!important;box-shadow:none!important;overflow:visible!important}.novel-reader{position:static!important;width:auto!important;height:auto!important;min-height:0!important;background:#fff!important;color:#111!important}.novel-reader>*{display:none!important}.novel-reader>.print-document{display:block!important}.print-document .reader-prose{display:block!important;max-width:none!important;font-size:11pt!important;line-height:1.7!important;color:#111!important}.print-document .reader-prose h1{page-break-before:always}.print-document .reader-prose h1:first-child{page-break-before:auto}.device-caption{display:none!important}}

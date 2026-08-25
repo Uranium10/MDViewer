@@ -267,3 +267,6 @@
 
 [Codex - mobile code scrolling - 2026-08-23]
 - Enabled native horizontal touch scrolling for overflowing code blocks and isolated code swipes from paginated page-turn gestures.
+
+[Codex - balanced reader spacing and italics - 2026-08-25]
+- Balanced the paginated body viewport with equal vertical insets and restored italic emphasis in the sans-serif reading mode.
