@@ -276,3 +276,6 @@
 - Added seven-day expiry metadata, 404 handling, a secured daily Vercel Cron cleanup, and a plaintext-removing Turso migration.
 - Added retention/privacy guidance, expiry confirmation, developer contact details, security headers, and README documentation.
 - Promoted the app and encrypted share format to v2, removed plaintext from 7 remote Turso records, and then permanently removed their remaining pre-v2 metadata tombstones.
+
+[Codex - share guidance layout - 2026-08-30]
+- Removed the overlapping share-retention note from the library screen and moved its privacy and seven-day retention guidance into the help guidebook.
