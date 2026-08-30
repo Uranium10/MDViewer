@@ -7,8 +7,8 @@ function encodeBase64Url(bytes:Uint8Array){
   return output;
 }
 
-export async function createContentId(content:string){
-  const data=new TextEncoder().encode(content);
+export async function createContentId(content:string|ArrayBuffer){
+  const data=typeof content==="string"?new TextEncoder().encode(content):new Uint8Array(content);
   if(globalThis.crypto?.subtle){
     const digest=new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256",data));
     return encodeBase64Url(digest.slice(0,12));

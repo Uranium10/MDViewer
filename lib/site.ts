@@ -1,5 +1,5 @@
 export const SITE_NAME = "MD북스";
-export const SITE_DESCRIPTION = "Markdown과 텍스트 파일을 전자책처럼 읽고 URL로 공유하는 가벼운 웹 MDViewer·Ebook Reader입니다.";
+export const SITE_DESCRIPTION = "EPUB, Markdown과 텍스트 파일을 브라우저에서 전자책처럼 읽고 텍스트 문서를 암호화된 URL로 공유하는 가벼운 Ebook Reader입니다.";
 
 export function getSiteUrl() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;

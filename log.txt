@@ -282,3 +282,9 @@
 
 [Codex - Google site verification - 2026-08-30]
 - Added the Google Search Console HTML verification file at the public site root.
+
+[Codex - EPUB reader and in-device file errors - 2026-08-30]
+- Replaced unsupported, empty, and damaged file toasts with an in-device 401 file error screen and an explicit return action.
+- Added lazy-loaded EPUB.js support for local EPUB files with sandboxed scripted content, remote-resource blocking, an 80 MB input cap, and a patched XML parser dependency.
+- Added EPUB metadata and table-of-contents loading, paginated and scrolling modes, CFI-based resume and bookmarks, scrub navigation, keyboard and touch page turns, themes, local IndexedDB persistence, and original-file download.
+- Updated the start screen, guidebook, metadata, manifest, README, and recent-document model for EPUB support.
