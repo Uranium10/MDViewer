@@ -279,3 +279,6 @@
 
 [Codex - share guidance layout - 2026-08-30]
 - Removed the overlapping share-retention note from the library screen and moved its privacy and seven-day retention guidance into the help guidebook.
+
+[Codex - Google site verification - 2026-08-30]
+- Added the Google Search Console HTML verification file at the public site root.
