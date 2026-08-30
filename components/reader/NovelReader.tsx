@@ -12,8 +12,9 @@ import ReaderSharePanel from "./ReaderSharePanel";
 import ReaderSavePanel from "./ReaderSavePanel";
 import ReaderConfirmDialog from "./ReaderConfirmDialog";
 import MarkdownRenderer from "./MarkdownRenderer";
+import type { ShareLink } from "@/types/document";
 
-type Props={documentId:string;title:string;markdown:string;preview?:boolean;onBack?:()=>void;onCreateShare?:()=>Promise<string|undefined>;onPageChange?:(current:number,total:number)=>void};
+type Props={documentId:string;title:string;markdown:string;preview?:boolean;onBack?:()=>void;onCreateShare?:()=>Promise<ShareLink|undefined>;onPageChange?:(current:number,total:number)=>void};
 type Popover="share"|"save"|null;
 type StoredSession={progress?:unknown;bookmarks?:unknown};
 const DRAWER_GRAB_HEIGHT=72,DRAWER_TRIGGER_DISTANCE=56;

@@ -270,3 +270,9 @@
 
 [Codex - balanced reader spacing and italics - 2026-08-25]
 - Balanced the paginated body viewport with equal vertical insets and restored italic emphasis in the sans-serif reading mode.
+
+[Codex - encrypted expiring shares - 2026-08-30]
+- Added browser-only AES-GCM encrypted sharing with URL-fragment keys and client-only decryption.
+- Added seven-day expiry metadata, 404 handling, a secured daily Vercel Cron cleanup, and a plaintext-removing Turso migration.
+- Added retention/privacy guidance, expiry confirmation, developer contact details, security headers, and README documentation.
+- Promoted the app and encrypted share format to v2, removed plaintext from 7 remote Turso records, and then permanently removed their remaining pre-v2 metadata tombstones.

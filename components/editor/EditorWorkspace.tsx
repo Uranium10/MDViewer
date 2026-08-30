@@ -7,7 +7,9 @@ import ReaderSharePanel from "@/components/reader/ReaderSharePanel";
 import EInkTetris from "@/components/game/EInkTetris";
 import { inferTitle } from "@/lib/markdown";
 import { createContentId } from "@/lib/content-id";
+import { encryptSharedDocument } from "@/lib/share-crypto";
 import { loadRecentDocument, readRecentMeta, saveRecentDocument, writeRecentMeta, type RecentDocument, type RecentDocumentMeta } from "@/lib/recent-document";
+import type { ShareLink } from "@/types/document";
 
 type LocalDocument={id:string;title:string;filename:string;markdown:string};
 type LoadingState={progress:number;label:string}|null;
@@ -95,21 +97,23 @@ export default function EditorWorkspace() {
   const leaveReader = () => {if(recentMeta.current){writeRecentMeta(recentMeta.current);setRecent(recentMeta.current)}setDocument(null)};
   const resumeRecent=async()=>{try{const saved=recentDocument.current||await loadRecentDocument();if(!saved||!recent||saved.id!==recent.id)throw new Error("이어 읽을 문서를 찾지 못했습니다.");recentDocument.current=saved;setDocument(saved);setMessage("")}catch(error){flash(error instanceof Error?error.message:"문서를 다시 열지 못했습니다.",2600)}};
 
-  const createShareLink = async () => {
+  const createShareLink = async (): Promise<ShareLink | undefined> => {
     if (!document) return;
     if(sharing.current)throw new Error("공유 링크를 이미 만드는 중입니다.");
     sharing.current = true;
     setMessage("공유 링크를 만드는 중…");
     try {
+      const encrypted=await encryptSharedDocument({title:document.title,markdown:document.markdown});
       const response = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(document),
+        body: JSON.stringify({ciphertext:encrypted.ciphertext,iv:encrypted.iv,encryptionVersion:2}),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "공유에 실패했습니다.");
-      const url = new URL(data.url, location.origin).href;
-      setMessage("");return url;
+      const url = new URL(data.url, location.origin);
+      url.hash=new URLSearchParams({k:encrypted.key}).toString();
+      setMessage("");return{url:url.href,expiresAt:typeof data.expiresAt==="string"?data.expiresAt:undefined};
     } catch (error) {
       if ((error as DOMException)?.name !== "AbortError")
         flash(error instanceof Error ? error.message : "공유에 실패했습니다.", 2600);
@@ -146,7 +150,7 @@ export default function EditorWorkspace() {
         <span className="open-copy">{dragging ? "파일을 놓으면 바로 열립니다" : "누르거나 파일을 끌어다 놓으세요"}</span>
         <small>복사한 텍스트는 화면 어디서나 붙여넣을 수 있어요</small>
         <span className="mobile-open-copy">눌러서 파일을 여세요</span>
-      </button>{recent&&<button className="resume-book" onClick={()=>void resumeRecent()} aria-label={`${recent.filename}, ${recent.currentPage} / ${recent.totalPages} 페이지부터 이어읽기`}><span>이어읽기</span><strong title={recent.filename}>{recent.filename}</strong><small>{recent.currentPage} / {recent.totalPages} 페이지</small></button>}</div><nav className="feature-toolbar library-toolbar" aria-label="시작 화면 메뉴"><LibraryTool icon="share" label="공유" onClick={shareApp}/><LibraryTool icon="memo" label="메모" disabled/><LibraryTool icon="tetris" label="게임" onClick={openGame}/></nav>{loading&&<div className="library-loading" role="status"><strong>{loading.label}</strong><div><span style={{width:`${loading.progress}%`}}/></div><small>{loading.progress}%</small></div>}{libraryGuide&&<ReaderGuidebook onBack={closeLibraryGuide}/>} {libraryShare&&<ReaderSharePanel title="MD북스" onCreateShare={async()=>location.href} onClose={()=>setLibraryShare(false)} modal copySuccess="MD북스를 공유해줘서 고마워요."/>}</>}
+      </button>{recent&&<button className="resume-book" onClick={()=>void resumeRecent()} aria-label={`${recent.filename}, ${recent.currentPage} / ${recent.totalPages} 페이지부터 이어읽기`}><span>이어읽기</span><strong title={recent.filename}>{recent.filename}</strong><small>{recent.currentPage} / {recent.totalPages} 페이지</small></button>}<p className="library-privacy">공유 링크를 아는 사람만 열람할 수 있으며 서버에는 암호문만 보관됩니다.<br/>공유 문서는 7일 후 자동 삭제됩니다.</p><footer className="library-footer">개발자 연락: <a href="mailto:kdm10ho@naver.com">kdm10ho@naver.com</a></footer></div><nav className="feature-toolbar library-toolbar" aria-label="시작 화면 메뉴"><LibraryTool icon="share" label="공유" onClick={shareApp}/><LibraryTool icon="memo" label="메모" disabled/><LibraryTool icon="tetris" label="게임" onClick={openGame}/></nav>{loading&&<div className="library-loading" role="status"><strong>{loading.label}</strong><div><span style={{width:`${loading.progress}%`}}/></div><small>{loading.progress}%</small></div>}{libraryGuide&&<ReaderGuidebook onBack={closeLibraryGuide}/>} {libraryShare&&<ReaderSharePanel title="MD북스" onCreateShare={async()=>({url:location.href})} onClose={()=>setLibraryShare(false)} modal copySuccess="MD북스를 공유해줘서 고마워요."/>}</>}
       <input ref={inputRef} hidden type="file" accept=".md,.txt,text/markdown,text/plain" onChange={(e) => void openFile(e.target.files?.[0])}/>
     </section>
     {!document&&!gameOpen&&<div className="device-caption"><span>MD북스</span><p>Markdown · Text Ebook Reader &amp; Viewer</p></div>}
